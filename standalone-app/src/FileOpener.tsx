@@ -1,4 +1,5 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import type React from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 
 import "./FileOpener.css";
 import {assert} from "./assert";
@@ -255,7 +256,7 @@ export function FileOpener({setData, validate, loadStateController}: FileOpenerP
                         <div className="textarea-hint">Paste your query plan. To open a file, use drag & drop.</div>
                     </div>
                     <button onClick={submit} disabled={submitDisabled}>
-                        Parse and Visualize Plan
+                        Visualize Plan
                     </button>
                     {renderedError}
                     <div className="github-link">

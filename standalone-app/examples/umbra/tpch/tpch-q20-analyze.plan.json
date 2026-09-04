@@ -1,0 +1,163 @@
+{
+ "plan":{
+  "operator":"sort",
+  "physicalOperator":"sort",
+  "cardinality":2,
+  "operatorId":1,"analyzePlanId":0,"analyzePlanCardinality":1,"analyzePlanCounters":{},
+  "input":{
+   "operator":"join",
+   "physicalOperator":"hashjoin",
+   "cardinality":2,
+   "operatorId":2,"analyzePlanId":1,"analyzePlanCardinality":1,"analyzePlanCounters":{"slots":32,"chains":17,"minmaxbounds":"off","hashtable":"compact","filter":"off","chaining":"off"},
+   "left":{
+    "operator":"earlyexecution",
+    "physicalOperator":"earlyexecution",
+    "cardinality":23,
+    "operatorId":3,"analyzePlanId":2,"analyzePlanCardinality":23,"analyzePlanCounters":{},
+    "attributes":[{"name":"s_suppkey", "iu":"s_suppkey"}, {"name":"s_name", "iu":"s_name"}, {"name":"s_address", "iu":"s_address"}],
+    "restrictions":[],
+    "residuals":[],
+    "input":{
+     "operator":"tablescan",
+     "physicalOperator":"tablescan",
+     "cardinality":1,
+     "operatorId":4,"analyzePlanId":3,"analyzePlanCardinality":0,"analyzePlanCounters":{},
+     "attributes":[{"name":"s_suppkey", "iu":"s_suppkey4"}, {"name":"s_name", "iu":"s_name5"}, {"name":"s_address", "iu":"s_address6"}, {"name":"s_nationkey", "iu":"s_nationkey"}, {"name":"s_phone", "iu":"s_phone"}, {"name":"s_acctbal", "iu":"s_acctbal"}, {"name":"s_comment", "iu":"s_comment"}],
+     "restrictions":[{"attribute":3, "mode":"=", "value":{"expression":"const", "value":{"type":{"type":"integer"}, "value":3}}, "estimatedSelectivity":-1, "collate":""}],
+     "residuals":[],
+     "tid":"tid",
+     "tableoid":"tableoid",
+     "rowstate":"rowstate",
+     "schema":"pg_temp",
+     "table":{"type":"temporarytable", "id":3},
+     "tableSize":518,
+     "tablename":"supplier"
+    },
+    "mapping":{"mapping":[{"key":"s_suppkey4", "value":"s_suppkey"}, {"key":"s_name5", "value":"s_name"}, {"key":"s_address6", "value":"s_address"}]},
+    "result":0
+   },
+   "right":{
+    "operator":"join",
+    "physicalOperator":"hashjoin",
+    "cardinality":20,
+    "operatorId":5,"analyzePlanId":4,"analyzePlanCardinality":1,"analyzePlanCounters":{"slots":16,"chains":1,"minmaxbounds":"off","hashtable":"compact","filter":"off","chaining":"off"},
+    "left":{
+     "operator":"earlyprobe",
+     "physicalOperator":"earlyprobe",
+     "cardinality":2,
+     "operatorId":6,"analyzePlanId":5,"analyzePlanCardinality":1,"analyzePlanCounters":{},
+     "input":{
+      "operator":"earlyexecution",
+      "physicalOperator":"earlyexecution",
+      "cardinality":4,
+      "operatorId":7,"analyzePlanId":6,"analyzePlanCardinality":4,"analyzePlanCounters":{},
+      "attributes":[{"name":"ps_partkey", "iu":"ps_partkey"}, {"name":"ps_suppkey", "iu":"ps_suppkey"}, {"name":"ps_availqty", "iu":"ps_availqty"}],
+      "restrictions":[],
+      "residuals":[],
+      "input":{
+       "operator":"tablescan",
+       "physicalOperator":"tablescan",
+       "cardinality":4,
+       "operatorId":8,"analyzePlanId":7,"analyzePlanCardinality":0,"analyzePlanCounters":{},
+       "attributes":[{"name":"ps_partkey", "iu":"ps_partkey17"}, {"name":"ps_suppkey", "iu":"ps_suppkey18"}, {"name":"ps_availqty", "iu":"ps_availqty19"}, {"name":"ps_supplycost", "iu":"ps_supplycost"}, {"name":"ps_comment", "iu":"ps_comment"}],
+       "restrictions":[],
+       "residuals":[{"expression":"in", "input":[{"expression":"iuref", "iu":"ps_partkey17"}], "values":[{"type":{"type":"integer"}, "value":76510}, {"type":{"type":"integer"}, "value":125032}, {"type":{"type":"integer"}, "value":10297}, {"type":{"type":"integer"}, "value":17936}], "collates":[""]}],
+       "tid":"tid22",
+       "tableoid":"tableoid23",
+       "rowstate":"rowstate24",
+       "schema":"pg_temp",
+       "table":{"type":"temporarytable", "id":4},
+       "tableSize":537,
+       "tablename":"partsupp"
+      },
+      "mapping":{"mapping":[{"key":"ps_partkey17", "value":"ps_partkey"}, {"key":"ps_suppkey18", "value":"ps_suppkey"}, {"key":"ps_availqty19", "value":"ps_availqty"}]},
+      "result":1
+     },
+     "source":2,
+     "ius":[{"expression":"iuref", "iu":"ps_suppkey"}]
+    },
+    "right":{
+     "operator":"map",
+     "physicalOperator":"map",
+     "cardinality":51,
+     "operatorId":9,"analyzePlanId":8,"analyzePlanCardinality":1,"analyzePlanCounters":{},
+     "input":{
+      "operator":"groupby",
+      "physicalOperator":"groupby",
+      "cardinality":51,
+      "operatorId":10,"analyzePlanId":9,"analyzePlanCardinality":1,"analyzePlanCounters":{},
+      "input":{
+       "operator":"earlyprobe",
+       "physicalOperator":"earlyprobe",
+       "cardinality":57,
+       "operatorId":11,"analyzePlanId":10,"analyzePlanCardinality":1,"analyzePlanCounters":{},
+       "input":{
+        "operator":"earlyprobe",
+        "physicalOperator":"earlyprobe",
+        "cardinality":101,
+        "operatorId":12,"analyzePlanId":11,"analyzePlanCardinality":1,"analyzePlanCounters":{},
+        "input":{
+         "operator":"earlyexecution",
+         "physicalOperator":"earlyexecution",
+         "cardinality":150,
+         "operatorId":13,"analyzePlanId":12,"analyzePlanCardinality":150,"analyzePlanCounters":{},
+         "attributes":[{"name":"l_partkey", "iu":"l_partkey"}, {"name":"l_suppkey", "iu":"l_suppkey"}, {"name":"l_quantity", "iu":"l_quantity"}],
+         "restrictions":[],
+         "residuals":[],
+         "input":{
+          "operator":"tablescan",
+          "physicalOperator":"tablescan",
+          "cardinality":1,
+          "operatorId":14,"analyzePlanId":13,"analyzePlanCardinality":0,"analyzePlanCounters":{},
+          "attributes":[{"name":"l_orderkey", "iu":"l_orderkey"}, {"name":"l_partkey", "iu":"l_partkey29"}, {"name":"l_suppkey", "iu":"l_suppkey30"}, {"name":"l_linenumber", "iu":"l_linenumber"}, {"name":"l_quantity", "iu":"l_quantity32"}, {"name":"l_extendedprice", "iu":"l_extendedprice"}, {"name":"l_discount", "iu":"l_discount"}, {"name":"l_tax", "iu":"l_tax"}, {"name":"l_returnflag", "iu":"l_returnflag"}, {"name":"l_linestatus", "iu":"l_linestatus"}, {"name":"l_shipdate", "iu":"l_shipdate"}, {"name":"l_commitdate", "iu":"l_commitdate"}, {"name":"l_receiptdate", "iu":"l_receiptdate"}, {"name":"l_shipinstruct", "iu":"l_shipinstruct"}, {"name":"l_shipmode", "iu":"l_shipmode"}, {"name":"l_comment", "iu":"l_comment"}],
+          "restrictions":[{"attribute":10, "mode":"[]", "value":{"expression":"const", "value":{"type":{"type":"date"}, "value":2449354}}, "upper":{"expression":"const", "value":{"type":{"type":"date"}, "value":2449718}}, "estimatedSelectivity":-1, "collate":""}],
+          "residuals":[],
+          "tid":"tid44",
+          "tableoid":"tableoid45",
+          "rowstate":"rowstate46",
+          "schema":"pg_temp",
+          "table":{"type":"temporarytable", "id":7},
+          "tableSize":572,
+          "tablename":"lineitem"
+         },
+         "mapping":{"mapping":[{"key":"l_partkey29", "value":"l_partkey"}, {"key":"l_suppkey30", "value":"l_suppkey"}, {"key":"l_quantity32", "value":"l_quantity"}]},
+         "result":2
+        },
+        "source":5,
+        "ius":[{"expression":"iuref", "iu":"l_suppkey"}, {"expression":"iuref", "iu":"l_partkey"}]
+       },
+       "source":2,
+       "ius":[{"expression":"iuref", "iu":"l_suppkey"}]
+      },
+      "values":[{"expression":"iuref", "iu":"l_quantity"}, {"expression":"iuref", "iu":"l_partkey"}, {"expression":"iuref", "iu":"l_suppkey"}],
+      "key":[{"arg":1, "iu":"l_partkey47", "collate":""}, {"arg":2, "iu":"l_suppkey48", "collate":""}],
+      "groupingmode":"regular",
+      "aggregates":[{"op":"sum", "arg":0, "collate":"", "iu":"sum(l_quantity)"}],
+      "orders":[],
+      "groupingsets":[],
+      "sortlimitorder":[]
+     },
+     "values":[{"iu":"v", "exp":{"expression":"mul", "left":{"expression":"const", "value":{"type":{"type":"numeric", "precision":2, "scale":1}, "value":5}}, "right":{"expression":"iuref", "iu":"sum(l_quantity)"}}}]
+    },
+    "condition":{"expression":"and", "input":[{"expression":"compare", "left":{"expression":"iuref", "iu":"ps_suppkey"}, "right":{"expression":"iuref", "iu":"l_suppkey48"}, "direction":"=", "collate":""}, {"expression":"compare", "left":{"expression":"iuref", "iu":"ps_partkey"}, "right":{"expression":"iuref", "iu":"l_partkey47"}, "direction":"=", "collate":""}, {"expression":"compare", "left":{"expression":"iuref", "iu":"ps_availqty"}, "right":{"expression":"iuref", "iu":"v"}, "direction":">", "collate":""}]},
+    "type":"inner",
+    "forcedestimate":19.71205419196084
+   },
+   "condition":{"expression":"compare", "left":{"expression":"iuref", "iu":"s_suppkey"}, "right":{"expression":"iuref", "iu":"l_suppkey48"}, "direction":"=", "collate":""},
+   "type":"leftsemi",
+   "forcedestimate":2.0324840850165713
+  },
+  "order":[{"value":{"expression":"iuref", "iu":"s_name"}, "collate":""}]
+ },
+ "ius":[{"iu":"s_suppkey4", "type":{"type":"integer"}}, {"iu":"s_name5", "type":{"type":"char", "precision":25}}, {"iu":"s_address6", "type":{"type":"text", "precision":40}}, {"iu":"s_nationkey", "type":{"type":"integer"}}, {"iu":"s_phone", "type":{"type":"char", "precision":15}}, {"iu":"s_acctbal", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"s_comment", "type":{"type":"text", "precision":101}}, {"iu":"tid", "type":{"type":"bigint"}}, {"iu":"tableoid", "type":{"type":"integer"}}, {"iu":"rowstate", "type":{"type":"bigint"}}, {"iu":"ps_partkey17", "type":{"type":"integer"}}, {"iu":"ps_suppkey18", "type":{"type":"integer"}}, {"iu":"ps_availqty19", "type":{"type":"integer"}}, {"iu":"ps_supplycost", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"ps_comment", "type":{"type":"text", "precision":199}}, {"iu":"tid22", "type":{"type":"bigint"}}, {"iu":"tableoid23", "type":{"type":"integer"}}, {"iu":"rowstate24", "type":{"type":"bigint"}}, {"iu":"l_orderkey", "type":{"type":"integer"}}, {"iu":"l_partkey29", "type":{"type":"integer"}}, {"iu":"l_suppkey30", "type":{"type":"integer"}}, {"iu":"l_linenumber", "type":{"type":"integer"}}, {"iu":"l_quantity32", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"l_extendedprice", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"l_discount", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"l_tax", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"l_returnflag", "type":{"type":"char1"}}, {"iu":"l_linestatus", "type":{"type":"char1"}}, {"iu":"l_shipdate", "type":{"type":"date"}}, {"iu":"l_commitdate", "type":{"type":"date"}}, {"iu":"l_receiptdate", "type":{"type":"date"}}, {"iu":"l_shipinstruct", "type":{"type":"char", "precision":25}}, {"iu":"l_shipmode", "type":{"type":"char", "precision":10}}, {"iu":"l_comment", "type":{"type":"text", "precision":44}}, {"iu":"tid44", "type":{"type":"bigint"}}, {"iu":"tableoid45", "type":{"type":"integer"}}, {"iu":"rowstate46", "type":{"type":"bigint"}}, {"iu":"sum(l_quantity)", "type":{"type":"numeric", "precision":18, "scale":2}}, {"iu":"l_partkey47", "type":{"type":"integer"}}, {"iu":"l_suppkey48", "type":{"type":"integer"}}, {"iu":"l_partkey", "type":{"type":"integer"}}, {"iu":"l_suppkey", "type":{"type":"integer"}}, {"iu":"l_quantity", "type":{"type":"numeric", "precision":12, "scale":2}}, {"iu":"s_suppkey", "type":{"type":"integer"}}, {"iu":"s_name", "type":{"type":"char", "precision":25}}, {"iu":"s_address", "type":{"type":"text", "precision":40}}, {"iu":"ps_partkey", "type":{"type":"integer"}}, {"iu":"ps_suppkey", "type":{"type":"integer"}}, {"iu":"ps_availqty", "type":{"type":"integer"}}, {"iu":"v", "type":{"type":"bignumeric", "precision":20, "scale":3}}],
+ "output":[{"name":"s_name", "iu":{"expression":"iuref", "iu":"s_name"}}, {"name":"s_address", "iu":{"expression":"iuref", "iu":"s_address"}}],
+ "type":"select",
+ "query":true,
+ "analyzePlanPipelines":[
+  {"pipelineId":0,"start":27,"stop":76,"duration":49,"parallelism":"single-threaded","operators":[2],"counters":{}},
+  {"pipelineId":1,"start":79,"stop":98,"duration":19,"parallelism":"single-threaded","operators":[5,6],"counters":{}},
+  {"pipelineId":2,"start":99,"stop":157,"duration":58,"parallelism":"multi-threaded","operators":[10,11,12],"counters":{}},
+  {"pipelineId":3,"start":158,"stop":198,"duration":40,"parallelism":"multi-threaded","operators":[1,4,8,9],"counters":{}},
+  {"pipelineId":4,"start":199,"stop":203,"duration":4,"parallelism":"multi-threaded","operators":[0],"counters":{}}
+ ]
+}

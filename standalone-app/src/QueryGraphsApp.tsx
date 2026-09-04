@@ -1,8 +1,9 @@
 import {useCallback, useEffect, useState} from "react";
 import {useBrowserUrl, useUrlParam} from "./browserUrlHooks";
-import {FileOpener, FileOpenerData, useLoadStateController} from "./FileOpener";
+import type {FileOpenerData} from "./FileOpener";
+import {FileOpener, useLoadStateController} from "./FileOpener";
 import {QueryGraph} from "@tableau/query-graphs/lib/ui/QueryGraph";
-import {TreeDescription} from "@tableau/query-graphs/lib/tree-description";
+import type {TreeDescription} from "@tableau/query-graphs/lib/tree-description";
 import {loadPlan} from "./tree-loader";
 import {tryCreateLocalStorageUrl, isLocalStorageURL, loadLocalStorageURL} from "./LocalStorageUrl";
 import {assert} from "./assert";
@@ -18,6 +19,11 @@ export function QueryGraphsApp() {
     const [treeUrl, setTreeUrl] = useUrlParam(browserUrl, "file");
     const [treeTitle, setTreeTitle] = useUrlParam(browserUrl, "title", true);
     const [uploadServer] = useUrlParam(browserUrl, "uploadServer");
+    // Keep the browser tab's title in sync
+    useEffect(() => {
+        const tabTitle = treeTitle ? `${treeTitle} - QueryGraphs` : "QueryGraphs";
+        document.title = tabTitle;
+    }, [treeTitle]);
     // Callback for the file opener
     const openPickedData = async (data: FileOpenerData): Promise<void> => {
         const content = data.content;
@@ -31,8 +37,8 @@ export function QueryGraphsApp() {
                 });
                 assert(uploadResult.ok);
                 url = new URL(await uploadResult.text());
-            } catch (_e) {
-                throw new Error(`Upload to ${uploadServer} failed!`);
+            } catch (e) {
+                throw new Error(`Upload to ${uploadServer} failed!`, {cause: e});
             }
         }
         if (!url) {
@@ -59,6 +65,11 @@ export function QueryGraphsApp() {
     // We keep the displayed tree in sync with the URL parameter
     useEffect(() => {
         if (!treeUrl) {
+            // Resetting `tree` here (rather than deriving it from `treeUrl` at render
+            // time) means the old tree stays on screen for one extra frame after
+            // `treeUrl` clears, until this effect runs. We accept that flicker to
+            // keep `tree` as the single source of truth for what's displayed.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTree(undefined);
             return;
         }
@@ -83,7 +94,7 @@ export function QueryGraphsApp() {
                     response = await fetch(urlString, {signal});
                 } catch (e) {
                     if (url.protocol == "blob:") {
-                        throw new Error("Local content no longer accessible");
+                        throw new Error("Local content no longer accessible", {cause: e});
                     }
                     throw e;
                 }

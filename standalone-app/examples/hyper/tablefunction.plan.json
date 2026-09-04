@@ -1,24 +1,26 @@
 {
-  "operator": "executiontarget",
-  "operatorId": 1,
-  "cardinality": 10,
-  "producesRows": true,
-  "output": [{"expression": "iuref", "iu": ["v", ["Integer"]]}],
-  "outputNames": ["generate_series"],
-  "input": {
-    "operator": "tablefunction",
-    "operatorId": 2,
-    "sqlpos": [[36, 51]],
-    "cardinality": 10,
-    "input": {
-      "operator": "tableconstruction",
-      "operatorId": 3,
-      "cardinality": 1,
+  "operator": "execution-target",
+  "operator-id": 1,
+  "estimated-rows": 10,
+  "produces-rows": true,
+  "output": [{"expression": "iu-ref", "iu": ["sequence", ["Integer"]]}],
+  "output-names": ["generate_series"],
+  "inputs": [{
+    "operator": "table-function",
+    "operator-id": 2,
+    "sqlpos": [[81, 96]],
+    "estimated-rows": 10,
+    "inputs": [{
+      "operator": "table-construction",
+      "operator-id": 3,
+      "estimated-rows": 1,
       "output": [],
-      "values": [[]]
-    },
+      "values": [[]],
+      "inputs": []
+    }],
     "function": "sequence",
     "args": [{"expression": "const", "value": {"type": ["Integer"], "value": 1}}, {"expression": "const", "value": {"type": ["Integer"], "value": 10}}, {"expression": "const", "value": {"type": ["Integer"], "value": 1}}],
-    "ius": [["v", ["Integer"]]]
-  }
+    "ius": [["sequence", ["Integer"]]],
+    "ordinality": ["ordinality", ["BigInt"]]
+  }]
 }

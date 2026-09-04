@@ -1,15 +1,19 @@
-import {memo, ReactElement, MouseEvent, useCallback, useRef, useEffect, RefObject} from "react";
-import {Handle, NodeProps, Position} from "reactflow";
+import type {ReactElement, MouseEvent, RefObject} from "react";
+import {memo, useCallback, useRef, useEffect} from "react";
+import type {Node, NodeProps} from "@xyflow/react";
+import {Handle, Position} from "@xyflow/react";
 import cc from "classcat";
-import {TreeNode} from "../tree-description";
+import type {TreeNode} from "../tree-description";
 import {NodeIcon} from "./NodeIcon";
 import "./QueryNode.css";
 import {useGraphRenderingStore} from "./store";
-import {assert} from "../loader-utils";
+import {assert} from "../assert";
 
 type NodeData = TreeNode & {resizeObserver: ResizeObserver};
 
-function useResizeObservedRef<T extends Element>(resizeObserver: ResizeObserver): RefObject<T> {
+export type QueryGraphNode = Node<NodeData, "querynode">;
+
+function useResizeObservedRef<T extends Element>(resizeObserver: ResizeObserver): RefObject<T | null> {
     const ref = useRef<T>(null);
     useEffect(() => {
         assert(ref.current !== null);
@@ -20,7 +24,7 @@ function useResizeObservedRef<T extends Element>(resizeObserver: ResizeObserver)
     return ref;
 }
 
-function QueryNode({data, id}: NodeProps<NodeData>) {
+function QueryNode({data, id}: NodeProps<QueryGraphNode>) {
     const bodyRef = useResizeObservedRef<HTMLDivElement>(data.resizeObserver);
     const headRef = useResizeObservedRef<HTMLDivElement>(data.resizeObserver);
 
@@ -69,6 +73,16 @@ function QueryNode({data, id}: NodeProps<NodeData>) {
         },
     ]);
 
+    // A (possibly multi-color) bar drawn above and below the node.
+    const colorBar = (colors: string[] | undefined, position: "above" | "below") =>
+        colors?.length ? (
+            <div className={cc(["qg-color-bar", `qg-color-bar-${position}`])}>
+                {colors.map((c, i) => (
+                    <span key={i} className="qg-color-bar-seg" style={{backgroundColor: c}} />
+                ))}
+            </div>
+        ) : null;
+
     const handleClassName = cc({
         "qg-subtree-handle": hasSubtree,
         "qg-expanded": hasSubtree && subtreeExpanded,
@@ -80,6 +94,7 @@ function QueryNode({data, id}: NodeProps<NodeData>) {
             <Handle type="target" position={Position.Top} />
             <div className={nodeClassName} onClick={onClick}>
                 <div className="qg-graph-node-head" ref={headRef}>
+                    {colorBar(data.barsAbove, "above")}
                     <NodeIcon icon={data.icon} iconColor={data.iconColor} />
                     <div className="qg-graph-node-label" style={{background: data.nodeColor}}>
                         {data.name}
@@ -90,6 +105,7 @@ function QueryNode({data, id}: NodeProps<NodeData>) {
                         {children}
                     </div>
                 </div>
+                {colorBar(data.barsBelow, "below")}
             </div>
             <Handle type="source" position={Position.Bottom} className={handleClassName} onClick={onSubtreeHandleClick}>
                 {hasSubtree ? (subtreeExpanded ? "-" : "+") : ""}

@@ -1,0 +1,25 @@
+{
+ "plan":{
+  "operator":"tablescan",
+  "physicalOperator":"tablescan",
+  "cardinality":5,
+  "operatorId":1,"analyzePlanId":0,"analyzePlanCardinality":5,"analyzePlanCounters":{},
+  "attributes":[{"name":"r_regionkey", "iu":"r_regionkey"}, {"name":"r_name", "iu":"r_name"}, {"name":"r_comment", "iu":"r_comment"}],
+  "restrictions":[],
+  "residuals":[],
+  "tid":"tid",
+  "tableoid":"tableoid",
+  "rowstate":"rowstate",
+  "schema":"pg_temp",
+  "table":{"type":"temporarytable", "id":9},
+  "tableSize":5,
+  "tablename":"region"
+ },
+ "ius":[{"iu":"r_regionkey", "type":{"type":"integer"}}, {"iu":"r_name", "type":{"type":"char", "precision":25}}, {"iu":"r_comment", "type":{"type":"text", "precision":152}}, {"iu":"tid", "type":{"type":"bigint"}}, {"iu":"tableoid", "type":{"type":"integer"}}, {"iu":"rowstate", "type":{"type":"bigint"}}],
+ "output":[{"name":"r_name", "iu":{"expression":"iuref", "iu":"r_name"}}],
+ "type":"select",
+ "query":true,
+ "analyzePlanPipelines":[
+  {"pipelineId":0,"start":13,"stop":39,"duration":26,"parallelism":"single-threaded","operators":[0],"counters":{}}
+ ]
+}

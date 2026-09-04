@@ -1,10 +1,14 @@
-import ReactFlow, {MiniMap, Node, Controls, ReactFlowProvider} from "reactflow";
-import "reactflow/dist/base.css";
+import {ReactFlow, MiniMap, Controls, ReactFlowProvider} from "@xyflow/react";
+import "@xyflow/react/dist/base.css";
 
 import {layoutTree} from "./tree-layout";
-import {TreeDescription, TreeNode, allChildren, visitTreeNodes} from "../tree-description";
-import {useMemo, useEffect, useRef, ReactNode} from "react";
+import type {TreeDescription, TreeNode} from "../tree-description";
+import {allChildren, visitTreeNodes} from "../tree-description";
+import type {ReactNode} from "react";
+import {useMemo, useEffect, useRef} from "react";
 import {QueryNode} from "./QueryNode";
+import type {QueryGraphNode} from "./QueryNode";
+import {ColoredEdge} from "./ColoredEdge";
 import {useGraphRenderingStore} from "./store";
 import "./QueryGraph.css";
 
@@ -13,7 +17,7 @@ interface QueryGraphProps {
     children: ReactNode | ReactNode[];
 }
 
-function minimapNodeColor(n: Node<TreeNode>): string {
+function minimapNodeColor(n: QueryGraphNode): string {
     if (n.data.nodeColor) return n.data.nodeColor;
     if (n.data.iconColor) return n.data.iconColor;
     return "hsl(0, 0%, 72%)";
@@ -21,6 +25,10 @@ function minimapNodeColor(n: Node<TreeNode>): string {
 
 const nodeTypes = {
     querynode: QueryNode,
+};
+
+const edgeTypes = {
+    colored: ColoredEdge,
 };
 
 function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
@@ -55,7 +63,7 @@ function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
     }, [treeDescription, initGraphStore, nodeIdMapping]);
 
     // Create a ResizeObserver to keep track of the sizes of the nodes
-    const resizeObserverRef = useRef<ResizeObserver>();
+    const resizeObserverRef = useRef<ResizeObserver | undefined>(undefined);
     const updateNodeDimensions = useGraphRenderingStore((s) => s.updateNodeDimensions);
     const resizeObserver = useMemo(() => {
         resizeObserverRef.current?.disconnect();
@@ -84,6 +92,7 @@ function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
             edges={layout.edges}
             nodeOrigin={[0.5, 0]}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             fitView
             minZoom={0.2}
             maxZoom={1.5}

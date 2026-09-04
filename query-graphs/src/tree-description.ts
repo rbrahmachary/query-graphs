@@ -12,7 +12,12 @@ export type IconName =
     | "virtual-table-symbol"
     | "const-table-symbol";
 
-export interface TreeNode {
+// Must be a `type` instead of the usual `interface`.
+// xyflow's `Node<NodeData>` requires NodeData to satisfy `Record<string, unknown>` and
+// TypeScript only infers that implicit index signature for type aliases, not interfaces.
+// Also see official docs at https://reactflow.dev/learn/advanced-use/typescript#custom-nodes
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type TreeNode = {
     // The displayed node name
     name?: string;
     // Color applied to node rects
@@ -24,12 +29,24 @@ export interface TreeNode {
     // Rendered in the tooltip
     properties?: Map<string, string>;
 
+    // Colors of a bar drawn just above the node
+    // (conceptually the "outgoing" side, toward the parent).
+    // Empty/undefined means no bar. Segments are drawn in array order.
+    barsAbove?: string[];
+    // Colors of a bar drawn just below the node
+    // (conceptually the "incoming" side, toward the children).
+    // Empty/undefined means no bar. Segments are drawn in array order.
+    barsBelow?: string[];
+
     // Additional CSS classes applied to the incoming link
     edgeClass?: string;
     // Label placed on the incoming edge
     edgeLabel?: string;
     // Width of the incoming edge
     edgeWidth?: number;
+    // Colors of the incoming edge. Several colors are drawn as a gradient,
+    // a single color as a solid stroke.
+    edgeColors?: string[];
 
     // All child nodes visible by default
     children?: TreeNode[];
@@ -37,7 +54,7 @@ export interface TreeNode {
     collapsedChildren?: TreeNode[];
     // Whether collapsed children are shown by default
     expandedByDefault?: boolean;
-}
+};
 
 export interface Crosslink {
     source: TreeNode;

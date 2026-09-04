@@ -1,0 +1,27 @@
+{
+ "plan":{
+  "operator":"generateseries",
+  "physicalOperator":"generateseries",
+  "cardinality":10,
+  "operatorId":1,
+  "input":{
+   "operator":"inlinetable",
+   "physicalOperator":"inlinetable",
+   "cardinality":1,
+   "operatorId":2,
+   "attributes":[],
+   "restrictions":[],
+   "residuals":[],
+   "count":1,
+   "values":[]
+  },
+  "iu":"index",
+  "from":{"expression":"const", "value":{"type":{"type":"integer"}, "value":1}},
+  "to":{"expression":"const", "value":{"type":{"type":"integer"}, "value":10}},
+  "step":{"expression":"const", "value":{"type":{"type":"integer"}, "value":1}}
+ },
+ "ius":[{"iu":"index", "type":{"type":"integer"}}],
+ "output":[{"name":"generate_series", "iu":{"expression":"iuref", "iu":"index"}}],
+ "type":"select",
+ "query":true
+}

@@ -28,35 +28,42 @@
   ],
   "license": "MIT",
   "files": [
-    "lib/*.js",
-    "lib/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
     "style/*.*"
   ],
   "directories": {
     "lib": "lib/"
   },
   "style": "style/query-graphs.css",
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
   "dependencies": {
+    "@xyflow/react": "^12.11.3",
     "classcat": "^5.0.4",
     "d3-flextree": "^2.1.2",
     "d3-hierarchy": "^3.1.2",
-    "immer": "^10.1.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "reactflow": "^11.11.4",
-    "xml2js": "^0.6.2",
+    "immer": "^11.1.18",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@types/d3-hierarchy": "^3.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "copyfiles": "^2.4.1",
     "rimraf": "^6.0.1",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   },
   "scripts": {
-    "clean": "rimraf dist/",
+    "clean": "rimraf lib/ tsconfig.tsbuildinfo",
     "copy-files": "copyfiles -u 1 src/**/*.css lib/",
-    "build": "yarn clean && tsc --build && yarn copy-files"
+    "build": "pnpm run clean && tsc --build && pnpm run copy-files"
   },
   "sideEffects": [
     "*.css"
