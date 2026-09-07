@@ -1,8 +1,6 @@
 import {create} from "zustand";
 import {immer} from "zustand/middleware/immer";
 import {devtools} from "zustand/middleware";
-import type {HighlightThresholds} from "../highlight-rules";
-import {DEFAULT_THRESHOLDS} from "../highlight-rules";
 
 export interface NodeDimensions {
     headWidth?: number;
@@ -12,7 +10,7 @@ export interface NodeDimensions {
 }
 
 interface GraphRenderingState {
-    init: (expandedSubtrees: Record<string, boolean>) => void;
+    init: (expandedSubtrees: Record<string, boolean>, highlightThresholds: Record<string, number>) => void;
     // `expandedNodes` tracks which nodes show their property detail panel (toggled by a plain click).
     expandedNodes: Record<string, boolean>;
     toggleExpandedNode: (nodeId: string) => void;
@@ -25,10 +23,13 @@ interface GraphRenderingState {
     // When true, non-flagged nodes are dimmed so highlighted issues stand out (focus mode).
     focusIssues: boolean;
     setFocusIssues: (focus: boolean) => void;
-    // Live-editable thresholds behind the highlight rules. Editing one re-highlights the plan without
-    // reloading it (see highlight-rules.ts). Reset to defaults when a new plan is loaded.
-    highlightThresholds: HighlightThresholds;
-    setThreshold: (key: keyof HighlightThresholds, value: number) => void;
+    // Current values of the plan's adjustable highlight thresholds, keyed by the opaque threshold key the
+    // loader's insights capability supplies. Editing one re-highlights the graph without reloading the
+    // plan (see QueryGraph.tsx). `defaultHighlightThresholds` is the loader's seed, used by reset. Both
+    // are re-seeded from the loaded tree's `insights.thresholds` on `init`.
+    highlightThresholds: Record<string, number>;
+    defaultHighlightThresholds: Record<string, number>;
+    setThreshold: (key: string, value: number) => void;
     resetThresholds: () => void;
 }
 
@@ -39,14 +40,16 @@ export const useGraphRenderingStore = create<GraphRenderingState>()(
             expandedSubtrees: {},
             nodeDimensions: {},
             focusIssues: false,
-            highlightThresholds: {...DEFAULT_THRESHOLDS},
-            init: (expandedSubtrees) => {
+            highlightThresholds: {},
+            defaultHighlightThresholds: {},
+            init: (expandedSubtrees, highlightThresholds) => {
                 set((state) => {
                     state.expandedNodes = {};
                     state.expandedSubtrees = expandedSubtrees;
                     state.nodeDimensions = {};
                     state.focusIssues = false;
-                    state.highlightThresholds = {...DEFAULT_THRESHOLDS};
+                    state.highlightThresholds = {...highlightThresholds};
+                    state.defaultHighlightThresholds = {...highlightThresholds};
                 });
             },
             setFocusIssues: (focus) =>
@@ -59,7 +62,7 @@ export const useGraphRenderingStore = create<GraphRenderingState>()(
                 }),
             resetThresholds: () =>
                 set((state) => {
-                    state.highlightThresholds = {...DEFAULT_THRESHOLDS};
+                    state.highlightThresholds = {...state.defaultHighlightThresholds};
                 }),
             toggleExpandedNode: (nodeId) =>
                 set((state) => {

@@ -64,7 +64,14 @@ function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
             },
             allChildren,
         );
-        initGraphStore(expandedSubtrees);
+        // Seed the adjustable highlight thresholds from the loader's insights capability, so the
+        // insights panel's sliders start at the loader's defaults and "Reset to defaults" can restore
+        // them. Loaders without live-tunable insights supply an empty threshold list.
+        const highlightThresholds: Record<string, number> = {};
+        for (const t of treeDescription.insights?.thresholds ?? []) {
+            highlightThresholds[t.key] = t.value;
+        }
+        initGraphStore(expandedSubtrees, highlightThresholds);
     }, [treeDescription, initGraphStore, nodeIdMapping]);
 
     // Create a ResizeObserver to keep track of the sizes of the nodes
@@ -88,19 +95,13 @@ function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
     const expandedSubtrees = useGraphRenderingStore((s) => s.expandedSubtrees);
     const focusIssues = useGraphRenderingStore((s) => s.focusIssues);
     const highlightThresholds = useGraphRenderingStore((s) => s.highlightThresholds);
-    const layout = useMemo(
-        () =>
-            layoutTree(
-                treeDescription,
-                nodeIdMapping,
-                nodeDimensions,
-                expandedNodes,
-                expandedSubtrees,
-                resizeObserver,
-                focusIssues,
-                highlightThresholds,
-            ),
-        [
+    const layout = useMemo(() => {
+        // Re-bake the tree's highlight fields for the current threshold values before laying out. The
+        // loader owns this logic (exposed opaquely via `insights.rehighlight`), keeping the layout stage
+        // database-agnostic; at the loader's defaults it reproduces the initial bake exactly. Runs before
+        // PlanInsights (a child) walks the tree, so its counts stay in sync with the re-highlighted nodes.
+        treeDescription.insights?.rehighlight(highlightThresholds);
+        return layoutTree(
             treeDescription,
             nodeIdMapping,
             nodeDimensions,
@@ -108,9 +109,17 @@ function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
             expandedSubtrees,
             resizeObserver,
             focusIssues,
-            highlightThresholds,
-        ],
-    );
+        );
+    }, [
+        treeDescription,
+        nodeIdMapping,
+        nodeDimensions,
+        expandedNodes,
+        expandedSubtrees,
+        resizeObserver,
+        focusIssues,
+        highlightThresholds,
+    ]);
 
     return (
         <ReactFlow
@@ -130,14 +139,13 @@ function QueryGraphInternal({treeDescription, children}: QueryGraphProps) {
             className={"query-graph"}
         >
             {...Array.isArray(children) ? children : [children]}
-            {/* The insights overlay (summary header + legend/tools panel) is built around the Hyper
-                scan-highlighting model, so it's only shown for Hyper plans. Other loaders (e.g.
-                Postgres) don't populate the highlight categories, so they'd get an always-empty
-                panel. Keyed on the explicit plan source rather than the `adjustableHighlights`
-                feature flag, which is deliberately unset for Hyper optimizer-steps trees. */}
-            {treeDescription.planSource === "hyper" ? (
-                <PlanInsights treeDescription={treeDescription} nodeIdMapping={nodeIdMapping} />
-            ) : null}
+            {/* The insights overlay (summary header + legend/tools panel) surfaces the plan-insights
+                data a loader bakes into the tree. It's gated on the generic `insights` capability
+                rather than a specific plan source, keeping the rendering stage database-agnostic: any
+                loader that populates the highlight categories opts in by supplying the capability.
+                Loaders that don't (e.g. Postgres) leave it unset and get no panel instead of an
+                always-empty one. */}
+            {treeDescription.insights ? <PlanInsights treeDescription={treeDescription} nodeIdMapping={nodeIdMapping} /> : null}
             <MiniMap zoomable={true} pannable={true} nodeColor={minimapNodeColor} />
             <Controls showInteractive={false} />
         </ReactFlow>

@@ -9,8 +9,6 @@ import type {QueryGraphNode} from "./QueryNode";
 import type {QueryGraphEdge as ColoredQueryGraphEdge} from "./QueryEdge";
 import {assertNotNull} from "../assert";
 import type {CSSProperties} from "react";
-import type {HighlightThresholds} from "../highlight-rules";
-import {deriveNodeDisplay} from "../highlight-rules";
 
 // Crosslinks have no `type`/`data` of their own, so they stay plain `Edge`s.
 type QueryGraphEdge = ColoredQueryGraphEdge | Edge;
@@ -32,29 +30,7 @@ export function layoutTree(
     expandedSubtrees: Record<string, boolean>,
     resizeObserver: ResizeObserver,
     focusIssues: boolean,
-    highlightThresholds: HighlightThresholds,
 ): TreeLayout {
-    // For plans that support adjustable highlighting (Hyper), recompute each node's
-    // threshold-dependent display (costly scan, cardinality misestimate, runtime hotspot) from the
-    // live thresholds. Other loaders bake highlights, so `derived` stays undefined for them.
-    // Results are memoized per node so the node pass and the edge pass (which both need the target
-    // node's display) don't recompute it twice — on large plans that halves the per-keystroke work.
-    const displayCache = new Map<TreeNode, ReturnType<typeof deriveNodeDisplay>>();
-    const derive = (n: TreeNode) => {
-        if (!treeData.adjustableHighlights) return undefined;
-        let d = displayCache.get(n);
-        if (d === undefined) {
-            d = deriveNodeDisplay(
-                n,
-                highlightThresholds,
-                treeData.planCpuTotal ?? 0,
-                treeData.planProcessedTotal ?? 0,
-                treeData.planMemoryTotal ?? 0,
-            );
-            displayCache.set(n, d);
-        }
-        return d;
-    };
     const root = d3hierarchy.hierarchy(treeData.root, (d) => {
         if (expandedSubtrees[nodeIds.get(d)!] && d.collapsedChildren) {
             return (d.children ?? []).concat(d.collapsedChildren);
@@ -103,37 +79,12 @@ export function layoutTree(
     const nodes: QueryGraphNode[] = d3nodes.map((n) => {
         const id = nodeIds.get(n.data);
         assertNotNull(id);
-        const derived = derive(n.data);
-        // The recomputed display fully replaces the loader's baked values (assigning even `undefined`,
-        // so a highlight that no longer applies under the current thresholds is cleared).
-        const data = derived
-            ? {
-                  ...n.data,
-                  highlightNode: derived.highlightNode,
-                  highlightReason: derived.highlightReason,
-                  costlyScan: derived.costlyScan,
-                  costlyScanColor: derived.costlyScanColor,
-                  highVolumeScan: derived.highVolumeScan,
-                  nodeColor: derived.nodeColor,
-                  memoryColor: derived.memoryColor,
-                  resizeObserver,
-              }
-            : {...n.data, resizeObserver};
-        // In focus mode, dim every node that is not an actual issue so the flagged issues pop.
-        // Issues are costly scans, index recommendations, runtime / memory hotspots (the latter two
-        // carry a `nodeColor` / `memoryColor` tint), duplicate output columns, and — most severe of
-        // all — a node that raised a runtime error. These match the problem categories PlanInsights
-        // lists and lets its "Next issue" navigation jump to, so focus mode never dims a node the panel
-        // treats as an issue. A used index is good, not a problem, so it is dimmed like any ordinary node.
-        const isIssue =
-            data.highlightNode === "costly-scan" ||
-            data.highlightNode === "high-volume-scan" ||
-            data.highlightNode === "index-rec" ||
-            !!data.nodeColor ||
-            !!data.memoryColor ||
-            !!data.duplicateColumns ||
-            !!data.errorMessage;
-        const dimmed = focusIssues && !isIssue;
+        const data = {...n.data, resizeObserver};
+        // In focus mode, dim every node that is not a flagged issue so the issues pop. Which nodes count
+        // as issues is loader policy, baked generically onto `TreeNode.isIssue` (see `deriveNodeDisplay`):
+        // the layout stage stays database-agnostic and never names a highlight category. The same flag
+        // drives the insights panel's "Next issue" navigation, so focus mode and the panel agree.
+        const dimmed = focusIssues && !data.isIssue;
         if (dimmed) dimmedNodeIds.add(id);
         return {
             id,
@@ -153,11 +104,9 @@ export function layoutTree(
             const width = Math.max(1, 10 * Math.min(1, e.target.data.edgeWidth));
             style.strokeWidth = `${width}px`;
         }
-        // The edge highlight (cardinality misestimate / costly-scan) is threshold-dependent, so take
-        // it from the recomputed display when available, otherwise from the baked loader values.
-        const derived = derive(e.target.data);
-        const edgeClass = derived ? derived.edgeClass : e.target.data.edgeClass;
-        const edgeReason = derived ? derived.edgeReason : e.target.data.edgeReason;
+        // The edge highlight (cardinality misestimate / costly-scan) is baked by the loader.
+        const edgeClass = e.target.data.edgeClass;
+        const edgeReason = e.target.data.edgeReason;
         // Dim an edge whenever its target node is dimmed, so focus mode fades the edge and the node
         // it points at together instead of leaving a colored edge crossing into a greyed-out node.
         const edgeDimmed = dimmedNodeIds.has(targetId);

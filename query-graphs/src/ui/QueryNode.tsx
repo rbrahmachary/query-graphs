@@ -111,10 +111,13 @@ function QueryNode({data, id}: NodeProps<QueryGraphNode>) {
 
     const children = [] as ReactElement[];
     for (const [key, value] of (data.properties ?? new Map<string, string>()).entries()) {
-        // `table-metadata` is a grouped property: a header row (`table-metadata:`) followed by one
-        // indented bullet row per sub-item (`identifier`, `partitioned-by`, `sort-order`). The loader
-        // packs the sub-items as newline-separated `label: value` lines; render them as a nested list.
-        if (key === "table-metadata") {
+        // Every per-property presentation decision (grouping, emphasis/heat tints, heat-map backgrounds,
+        // benign annotations) is baked by the loader onto `propertyStyles`; the renderer stays agnostic to
+        // what each property means and just applies whatever style is present. See `deriveNodeDisplay`.
+        const style = data.propertyStyles?.get(key);
+        // A grouped property renders as a header row followed by one indented sub-item per newline-
+        // separated `label: value` line (the loader packs the sub-items).
+        if (style?.grouped) {
             children.push(
                 <div key={key} className="qg-prop qg-prop-group-header">
                     <span className="qg-prop-name">{key}:</span>
@@ -132,73 +135,29 @@ function QueryNode({data, id}: NodeProps<QueryGraphNode>) {
             });
             continue;
         }
-        // A truncated column list (`columns`, `outputs`, or `duplicate-columns`): render an interactive
-        // preview whose `... [n]` marker reveals more columns on click, instead of the static fallback
-        // string in `value`. The `duplicate-columns` list carries the node's rose warning tint; the
-        // plain column lists are untinted.
+        // A truncated column list: render an interactive preview whose `... [n]` marker reveals more
+        // columns on click, instead of the static fallback string in `value`. Any row tint (e.g. the
+        // duplicate-columns warning) comes from the loader-supplied style class.
         const columnList = data.columnLists?.get(key);
         if (columnList) {
             children.push(
-                <div key={key} className={cc(["qg-prop", {"qg-prop-duplicate-columns": key === "duplicate-columns"}])}>
+                <div key={key} className={cc(["qg-prop", style?.className])}>
                     <span className="qg-prop-name">{key}:</span> <ColumnPreview names={columnList} />
                 </div>,
             );
             continue;
         }
-        // A few properties are called out among the other scan metrics with a highlight:
-        // `index-rec` gets an amber highlight; `index-used` is highlighted informational blue, but
-        // only when an index was actually used (value != "no").
-        const emphasized = key === "index-rec";
-        const indexUsed = key === "index-used" && value !== "no";
-        // On a costly scan, the processed-rows / rows-matching rows are flagged in light red.
-        const costlyScan = data.costlyScan && (key === "processed-rows" || key === "rows-matching");
-        // On a high-volume scan (that isn't also costly, which already tints it red), the processed-rows
-        // row is tinted indigo to match the node highlight.
-        const highVolumeScan = data.highVolumeScan && !data.costlyScan && key === "processed-rows";
-        // On a hybrid / vector search node, the `function` (e.g. `hybrid_search`) row is tinted teal to
-        // match the plan-insights legend accent, so the "this is a hybrid search" signal reads at a
-        // glance.
-        const vectorSearch = !!data.vectorSearch && key === "function";
-        // The `duplicate-columns` row (the loader-added list of repeated output names) is tinted to
-        // match the node's rose warning border.
-        const duplicateColumns = key === "duplicate-columns";
-        const rowClassName = cc([
-            "qg-prop",
-            {
-                "qg-prop-emphasized": emphasized,
-                "qg-prop-index-used": indexUsed,
-                "qg-prop-costly-scan": costlyScan,
-                "qg-prop-high-volume-scan": highVolumeScan,
-                "qg-prop-vector-search": vectorSearch,
-                "qg-prop-duplicate-columns": duplicateColumns,
-            },
-        ]);
-        // Tint the cpu-cycles row with the same runtime-heatmap color used on the node label, so an
-        // expensive node reads the same whether it is collapsed (label only) or expanded. Likewise,
-        // tint a costly scan's processed-rows / rows-matching rows with the same proportional red as
-        // the node box, so the opened node matches its collapsed shade.
-        let rowStyle: CSSProperties | undefined;
-        if (key === "cpu-cycles" && data.nodeColor) {
-            rowStyle = {background: data.nodeColor};
-        } else if (key === "memory-bytes" && data.memoryColor) {
-            // Tint the memory-bytes row with the memory-hotspot orange, mirroring how cpu-cycles is
-            // tinted with the runtime-heatmap violet.
-            rowStyle = {background: data.memoryColor};
-        } else if (costlyScan && data.costlyScanColor) {
-            rowStyle = {background: data.costlyScanColor};
-        }
-        // The "(likely early probe)" annotation the loader appends to a 0-row processed-rows value is
-        // highlighted green (benign — the scan was pruned, saving work). Split it out so only the
-        // annotation is tinted, not the "0" itself.
-        const earlyProbeIdx = key === "processed-rows" ? value.indexOf("(likely early probe)") : -1;
-        // The early-probe annotation needs its own tinted span, so it keeps the plain value markup. Any
-        // other value goes through `ValuePreview`, which truncates + adds a `more`/`less` toggle when the
-        // text is long (and renders verbatim otherwise).
+        const rowClassName = cc(["qg-prop", style?.className]);
+        const rowStyle: CSSProperties | undefined = style?.background ? {background: style.background} : undefined;
+        // A benign trailing annotation (e.g. "(likely early probe)") is split into its own tinted span so
+        // only the annotation is highlighted, not the value it trails. Any other value goes through
+        // `ValuePreview`, which truncates + adds a `more`/`less` toggle when long (and renders verbatim otherwise).
+        const annotationIdx = style?.annotation ? value.indexOf(style.annotation) : -1;
         const valueEl =
-            earlyProbeIdx >= 0 ? (
+            annotationIdx >= 0 ? (
                 <span className="qg-prop-value">
-                    {value.slice(0, earlyProbeIdx)}
-                    <span className="qg-prop-early-probe">{value.slice(earlyProbeIdx)}</span>
+                    {value.slice(0, annotationIdx)}
+                    <span className="qg-prop-early-probe">{value.slice(annotationIdx)}</span>
                 </span>
             ) : (
                 <ValuePreview text={value} />
